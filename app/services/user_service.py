@@ -1,14 +1,13 @@
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.schemas.user_auth import UserCreate
-from app.schemas.user_auth import UserResponse
 from app.core.security import get_hash_password
-from fastapi import HTTPException
+from app.core.security import verify_password 
 
-def create_user(db : Session , user_data: UserCreate):
+def create_user( db: Session , user_data: UserCreate  ):
     existing_user= db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
-        raise HTTPException(status_code= 200 , detail = "Email already registered")
+        return None 
     
     else:
         hash_password = get_hash_password(user_data.password)
@@ -19,5 +18,22 @@ def create_user(db : Session , user_data: UserCreate):
         db.refresh(new_user)
         return new_user 
     
+
+def authenticate_user( db: Session , user_data : UserCreate ):
+    user = db.query(User).filter(User.email == user_data.email).first()
+    if not user:
+        return None     
+    
+    if verify_password(user_data.password , user.password_hash):
+            return user
+        
+    return None 
+        
+        
+
+
+
+
+
 
 
