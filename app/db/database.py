@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker , declarative_base
 
 
 
-Database_url = "postgresql+psycopg2://postgres:admin123@host.docker.internal:5432/sentinel_db" 
+Database_url = "postgresql+psycopg2://postgres:admin123@postgres:5432/sentinel_db" 
 
 engine = create_engine(Database_url)
 
