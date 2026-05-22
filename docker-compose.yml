@@ -1,5 +1,4 @@
 services:
-
   api:
     build: .
     container_name: sentinel-api
@@ -16,7 +15,6 @@ services:
 
   postgres:
     image: postgres:17
-
     container_name: sentinel-postgres
 
     environment:
@@ -35,6 +33,13 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  redis:
+    image: redis:7
+    container_name: sentinel-redis
+
+    ports:
+      - "6379:6379"
 
 volumes:
   postgres_data:
