@@ -44,16 +44,33 @@ def get_user_monitors(
 # import time
 
 def perform_monitor_check(url):
-    start = time.time()
+    try:
+        start = time.time()
 
-    response = httpx.get(url, timeout= 10)
+        response = httpx.get(url, timeout=10)
 
-    end = time.time()
+        end = time.time()
 
-    response_time = (end - start) * 1000
+        response_time = (end - start) * 1000
 
-    return {
-        "status_code": response.status_code,
-        "response_time_ms": round(response_time, 2),
-        "is_up": response.status_code < 400 
-    }
+        return {
+            "status_code": response.status_code,
+            "response_time_ms": round(response_time, 2),
+            "is_up": response.status_code < 400
+        }
+
+    except httpx.TimeoutException:
+        return {
+            "status_code": None,
+            "response_time_ms": None,
+            "is_up": False,
+            "error": "Request timed out"
+        }
+
+    except httpx.RequestError as e:
+        return {
+            "status_code": None,
+            "response_time_ms": None,
+            "is_up": False,
+            "error": str(e)
+        }
