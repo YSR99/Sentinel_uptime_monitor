@@ -36,7 +36,10 @@ def fetch_user(db : Session = Depends(get_db),current_user : User = Depends(get_
 
 @router.get("/{id}/check")
 def monitor_check(id: int , db: Session = Depends(get_db), current_user : User = Depends(get_current_user)):
- monitor = db.query(Monitor).filter(Monitor.id == id).first()
+ monitor = db.query(Monitor).filter(
+    Monitor.id == id,
+    Monitor.user_id == current_user.id
+).first()
 
  if not monitor:
     raise HTTPException(status_code= 404 , detail= "Monitor not found")

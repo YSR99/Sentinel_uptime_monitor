@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from app.db.database import Base , engine 
-from app.models.user import User 
-from app.models.monitor import Monitor
+
 from app.v1.monitors import router as monitor_router
 from app.v1.health import router as health_router 
 

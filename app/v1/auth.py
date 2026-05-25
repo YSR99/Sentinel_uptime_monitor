@@ -8,12 +8,6 @@ from app.services.user_service  import create_user , authenticate_user
 from app.core.security import create_access_token ,   get_current_user 
 from fastapi.security import OAuth2PasswordRequestForm
 
-
-
-
-
-
-
 router   = APIRouter(prefix= "/auth" , tags=["Authentication"])
 
 @router.post("/register" , response_model= UserResponse)
@@ -58,7 +52,7 @@ def login_user(
     
 
     
-@router.get("/profile")
+@router.get("/profile" , response_model= UserResponse)
 def profile(current_user  = Depends(get_current_user)):
      return current_user 
      
