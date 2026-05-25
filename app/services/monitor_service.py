@@ -1,6 +1,7 @@
 from app.models.monitor import Monitor
 import httpx
 import time 
+from app.models.checkresults import CheckResults
 
 
 def create_monitor(db , monitor_data  , user_id):
@@ -26,23 +27,6 @@ def get_user_monitors(
     ).all()
 
 
-
-# def perform_monitor_check(url:str):
-#     start = time.perf_counter()
-
-#     response  =httpx.get(url , timeout= 10)
-
-#     end = time.perf_counter()
-
-#     return {
-#         "status code": response.status_code,
-#         "response_time_ms": round((end - start )* 1000 ,  2), 
-#         "is_up": response.status_code <400 
-
-#     }
-
-# import time
-
 def perform_monitor_check(url):
     try:
         start = time.time()
@@ -52,7 +36,7 @@ def perform_monitor_check(url):
         end = time.time()
 
         response_time = (end - start) * 1000
-
+ 
         return {
             "status_code": response.status_code,
             "response_time_ms": round(response_time, 2),
@@ -74,3 +58,22 @@ def perform_monitor_check(url):
             "is_up": False,
             "error": str(e)
         }
+
+
+def run_monitor_check(db, monitor):
+
+    result = perform_monitor_check(monitor.url)
+
+    monitor.current_status = "UP" if result["is_up"] else "DOWN"
+
+    new_result = CheckResults(
+        monitor_id=monitor.id,
+        status_code=result["status_code"],
+        response_time=result["response_time_ms"],
+        is_up=result["is_up"],
+        error=result.get("error")
+    )
+
+    db.add(new_result)
+
+    db.commit()

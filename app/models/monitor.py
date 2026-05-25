@@ -21,3 +21,5 @@ class Monitor(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     owner = relationship("User", back_populates= "monitor")
+    check_results = relationship("CheckResults", back_populates="monitor")
+
