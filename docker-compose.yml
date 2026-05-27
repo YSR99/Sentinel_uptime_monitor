@@ -41,5 +41,16 @@ services:
     ports:
       - "6379:6379"
 
+  worker:
+    build: .
+    command: python app/worker.py
+
+    env_file:
+      - .env
+
+    depends_on:
+      - redis
+      - postgres
+
 volumes:
   postgres_data:

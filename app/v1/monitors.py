@@ -7,9 +7,11 @@ from app.services.monitor_service import get_user_monitors
 from app.services.monitor_service import create_monitor 
 from app.models.user import User
 from app.core.security import get_current_user
-from app.services.monitor_service import run_monitor_check
 from app.models.monitor import Monitor
 from fastapi import HTTPException
+from app.core.queue import queue
+from app.services import monitor_service
+
 
 
 router = APIRouter (prefix = "/monitors", tags = ["Monitors"])
@@ -44,7 +46,11 @@ def monitor_check(id: int , db: Session = Depends(get_db), current_user : User =
  if not monitor:
     raise HTTPException(status_code= 404 , detail= "Monitor not found")
  
- run_monitor_check(db , monitor)
+ queue.enqueue(
+    monitor_service.perform_monitor_check,
+    monitor.url
+)
+ 
  return {"message": "Monitor checked successfully"}
 
 
