@@ -2,7 +2,7 @@ from app.models.monitor import Monitor
 import httpx
 import time 
 from app.models.checkresults import CheckResults
-
+from datetime import datetime, timezone
 
 def create_monitor(db , monitor_data  , user_id):
     monitor = Monitor(
@@ -60,20 +60,40 @@ def perform_monitor_check(url):
         }
 
 
-def run_monitor_check(db, monitor):
+def run_monitor_check(db, monitor_id):
 
-    result = perform_monitor_check(monitor.url)
+    try:
 
-    monitor.current_status = "UP" if result["is_up"] else "DOWN"
+        monitor = (
+            db.query(Monitor)
+            .filter(Monitor.id == monitor_id)
+            .first()
+        )
 
-    new_result = CheckResults(
-        monitor_id=monitor.id,
-        status_code=result["status_code"],
-        response_time=result["response_time_ms"],
-        is_up=result["is_up"],
-        error=result.get("error")
-    )
+        if not monitor:
+            return
 
-    db.add(new_result)
+        result = perform_monitor_check(monitor.url)
 
-    db.commit()
+        monitor.current_status = (
+            "UP" if result["is_up"] else "DOWN"
+        )
+
+        monitor.last_checked_at = datetime.now(timezone.utc)
+
+        new_result = CheckResults(
+            monitor_id=monitor.id,
+            status_code=result["status_code"],
+            response_time=result["response_time_ms"],
+            is_up=result["is_up"],
+            error=result.get("error")
+        )
+
+        db.add(new_result)
+
+        db.commit()
+
+    except Exception:
+
+        db.rollback()
+        raise

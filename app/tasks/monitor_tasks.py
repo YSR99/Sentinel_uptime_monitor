@@ -1,4 +1,4 @@
-from app.tasks.celery_app import celery
+from app.workers.celery_app import celery
 from app.services.monitor_service import perform_monitor_check
 
 

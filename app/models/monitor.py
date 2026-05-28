@@ -6,7 +6,8 @@ from sqlalchemy.orm import relationship
 from app.schemas.monitor import Monitor_Type
 from sqlalchemy import Column, DateTime
 from sqlalchemy.sql import func
-
+from app.models.user import User
+from app.models.checkresults import CheckResults
 
 
 class Monitor(Base):
@@ -19,6 +20,8 @@ class Monitor(Base):
 
     current_status = Column(String , default = "Unknown")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    next_check_at  = Column(DateTime(timezone=True), server_default=func.now(), index = True )
+    last_checked_at = Column(DateTime(timezone= True))
 
     owner = relationship("User", back_populates= "monitor")
     check_results = relationship("CheckResults", back_populates="monitor")
