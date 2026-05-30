@@ -15,7 +15,7 @@ celery.conf.beat_schedule = {
     "scan-monitors-every-10-seconds": {
         "task": "app.workers.beat_tasks.scan_monitors_task",
         "schedule": 10.0,
-    },
+    }
 }
 
 
