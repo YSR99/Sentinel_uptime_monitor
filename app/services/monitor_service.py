@@ -3,6 +3,9 @@ import httpx
 import time 
 from app.models.checkresults import CheckResults
 from datetime import datetime, timezone
+import logging
+logger  = logging.getLogger(__name__)
+
 
 def create_monitor(db , monitor_data  , user_id):
     monitor = Monitor(
@@ -40,7 +43,8 @@ def perform_monitor_check(url):
         return {
             "status_code": response.status_code,
             "response_time_ms": round(response_time, 2),
-            "is_up": response.status_code < 400
+            "is_up": response.status_code < 400,
+            "error": None 
         }
 
     except httpx.TimeoutException:
@@ -62,6 +66,7 @@ def perform_monitor_check(url):
 
 def run_monitor_check(db, monitor_id):
 
+
     try:
 
         monitor = (
@@ -72,12 +77,20 @@ def run_monitor_check(db, monitor_id):
 
         if not monitor:
             return
+        
+        logger.info(f"Checking monitor {monitor.id}")
+
+
 
         result = perform_monitor_check(monitor.url)
+        previous_status = monitor.current_status
 
-        monitor.current_status = (
+
+        new_status = (
             "UP" if result["is_up"] else "DOWN"
         )
+        monitor.current_status = new_status
+        logger.info(f"Monitor {monitor.id}: "f"{previous_status} -> {new_status}")
 
         monitor.last_checked_at = datetime.now(timezone.utc)
 
@@ -93,7 +106,11 @@ def run_monitor_check(db, monitor_id):
 
         db.commit()
 
+
+        logger.info(f"Monitor {monitor.id} status {new_status}")
+
     except Exception:
+        logger.exception(f"monitor check failed for {monitor_id}")
 
         db.rollback()
         raise

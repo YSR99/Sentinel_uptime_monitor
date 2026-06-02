@@ -15,3 +15,5 @@ class CheckResults(Base):
 
 
     monitor = relationship("Monitor", back_populates="check_results")
+
+    
