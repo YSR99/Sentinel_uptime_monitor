@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+from sqlalchemy import select
 
 from app.models.monitor import Monitor
 from app.workers.tasks import run_monitor_check_task 
@@ -7,11 +8,11 @@ def scan_due_monitors(db):
 
     current_time = datetime.now(timezone.utc)
 
-    due_monitors = (
-        db.query(Monitor)
-        .filter(Monitor.next_check_at <= current_time)
-        .all()
+    due_monitors = db.execute(
+    select(Monitor).where(
+        Monitor.next_check_at <= current_time
     )
+).scalars().all()
 
     for monitor in due_monitors:
 

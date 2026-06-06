@@ -51,7 +51,9 @@ def monitor_check(id: int , db: Session = Depends(get_db), current_user : User =
     monitor.url
 )
  
- return {"message": "Monitor checked successfully"}
+ return {
+    "message": "Monitor check scheduled"
+}
 
 
 

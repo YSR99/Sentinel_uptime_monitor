@@ -8,6 +8,7 @@ from sqlalchemy import Column, DateTime
 from sqlalchemy.sql import func
 from app.models.user import User
 from app.models.checkresults import CheckResults
+from app.models.incident import Incident
 
 
 class Monitor(Base):
@@ -18,11 +19,15 @@ class Monitor(Base):
     monitor_type= Column(Sqlenum(Monitor_Type))
     interval_sec = Column(Integer  , default= 60)
 
-    current_status = Column(String , default = "Unknown")
+    current_status = Column(String , default = "UNKNOWN")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     next_check_at  = Column(DateTime(timezone=True), server_default=func.now(), index = True )
     last_checked_at = Column(DateTime(timezone= True))
 
     owner = relationship("User", back_populates= "monitor")
     check_results = relationship("CheckResults", back_populates="monitor")
+    incidents = relationship(
+    "Incident",
+    back_populates="monitor"
+)
 

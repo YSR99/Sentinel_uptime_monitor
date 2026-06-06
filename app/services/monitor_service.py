@@ -4,6 +4,7 @@ import time
 from app.models.checkresults import CheckResults
 from datetime import datetime, timezone
 import logging
+from app.models.incident import Incident
 logger  = logging.getLogger(__name__)
 
 
@@ -66,9 +67,7 @@ def perform_monitor_check(url):
 
 def run_monitor_check(db, monitor_id):
 
-
     try:
-
         monitor = (
             db.query(Monitor)
             .filter(Monitor.id == monitor_id)
@@ -77,20 +76,43 @@ def run_monitor_check(db, monitor_id):
 
         if not monitor:
             return
-        
+
         logger.info(f"Checking monitor {monitor.id}")
-
-
 
         result = perform_monitor_check(monitor.url)
         previous_status = monitor.current_status
 
+        new_status = "UP" if result["is_up"] else "DOWN"
 
-        new_status = (
-            "UP" if result["is_up"] else "DOWN"
-        )
+        # Create Incident
+        if previous_status == "UP" and new_status == "DOWN":
+            incident = Incident(
+                monitor_id=monitor.id,
+                reason=result.get("error")
+                or f"HTTP {result['status_code']}"
+            )
+            db.add(incident)
+
+        # Resolve Incident
+        if previous_status == "DOWN" and new_status == "UP":
+            incident = (
+                db.query(Incident)
+                .filter(
+                    Incident.monitor_id == monitor.id,
+                    Incident.status == "OPEN"
+                )
+                .first()
+            )
+
+            if incident:
+                incident.status = "RESOLVED"
+                incident.resolved_at = datetime.now(timezone.utc)
+
         monitor.current_status = new_status
-        logger.info(f"Monitor {monitor.id}: "f"{previous_status} -> {new_status}")
+
+        logger.info(
+            f"Monitor {monitor.id}: {previous_status} -> {new_status}"
+        )
 
         monitor.last_checked_at = datetime.now(timezone.utc)
 
@@ -104,13 +126,22 @@ def run_monitor_check(db, monitor_id):
 
         db.add(new_result)
 
+        db.flush()
+
+        print("FLUSH OK")
+
         db.commit()
 
+        print("COMMIT OK")
 
-        logger.info(f"Monitor {monitor.id} status {new_status}")
+        logger.info(
+            f"Monitor {monitor.id} status {new_status}"
+        )
 
     except Exception:
-        logger.exception(f"monitor check failed for {monitor_id}")
+        logger.exception(
+            f"monitor check failed for {monitor_id}"
+        )
 
         db.rollback()
         raise
