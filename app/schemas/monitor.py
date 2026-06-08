@@ -1,12 +1,13 @@
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl
 from datetime import datetime 
+
 class Monitor_Type(Enum):
     WEBAPP = "webapp"
     API = "api"
 
 class MonitorCreate(BaseModel):
-    url : str
+    url : HttpUrl
     interval_sec : int 
     monitor_type : Monitor_Type
 
