@@ -9,7 +9,6 @@ from app.models.user import User
 from app.core.security import get_current_user
 from app.models.monitor import Monitor
 from fastapi import HTTPException
-from app.core.queue import queue
 from app.services import monitor_service
 
 
@@ -46,10 +45,7 @@ def monitor_check(id: int , db: Session = Depends(get_db), current_user : User =
  if not monitor:
     raise HTTPException(status_code= 404 , detail= "Monitor not found")
  
- queue.enqueue(
-    monitor_service.perform_monitor_check,
-    monitor.url
-)
+ result = monitor_service.perform_monitor_check(monitor.url)
  
  return {
     "message": "Monitor check scheduled"
