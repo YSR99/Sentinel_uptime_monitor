@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def create_monitor(db, monitor_data, user_id):
     monitor = Monitor(
-        url=monitor_data.url,
+        url=str(monitor_data.url),
         interval_sec=monitor_data.interval_sec,
         user_id=user_id,
         monitor_type=monitor_data.monitor_type,
