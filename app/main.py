@@ -8,6 +8,14 @@ from app.v1.auth import router as auth_router
 
 
 app = FastAPI()
+@app.get("/")
+def root():
+    return {
+        "name": "Sentinel Uptime Monitor",
+        "version": "1.0.0",
+        "status": "healthy",
+        "documentation": "/docs"
+    }
 print(Base.metadata.tables.keys())
 
 Base.metadata.create_all(bind = engine)
