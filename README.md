@@ -1,201 +1,66 @@
-# Sentinel - Uptime Monitoring System
+# Sentinel
 
-## Overview
+A distributed uptime monitor — add a URL, Sentinel checks it on a schedule, logs the results, and opens an incident when something goes down.
 
-Sentinel is a distributed uptime monitoring system that continuously monitors websites and APIs, records health check results, tracks incidents, and executes monitoring tasks asynchronously using Celery workers.
+Built this to get real hands-on experience with async task processing and distributed systems, not just another CRUD app. The scheduling/worker split (Celery Beat deciding what's due, workers actually doing the checks) was the main thing I wanted to get right.
 
-The system allows users to create monitors for websites, schedule automated health checks, and store monitoring history for reliability analysis.
+## How it works
 
----
+You register a monitor with a URL and a check interval → Celery Beat periodically scans for monitors that are due → those get pushed onto a Redis queue → Celery workers pick them up and run the actual HTTP health check → results get written to PostgreSQL → if a check fails, an incident gets created and the monitor status flips.
 
-## Features
+## Stack
 
-* User Authentication
-* Website and API Monitoring
-* Periodic Health Checks
-* Incident Tracking
-* URL Validation
-* Background Task Processing with Celery
-* Redis-Based Task Queue
-* PostgreSQL Database Storage
-* Monitoring History and Check Results
-* RESTful API Architecture
+**Backend:** FastAPI, PostgreSQL (SQLAlchemy), Celery + Redis, HTTPX, JWT auth
 
----
+## API
 
-## Architecture
-
-```text
-                ┌─────────────┐
-                │   Client    │
-                └──────┬──────┘
-                       │
-                       ▼
-                ┌─────────────┐
-                │   FastAPI   │
-                └──────┬──────┘
-                       │
-         ┌─────────────┴─────────────┐
-         │                           │
-         ▼                           ▼
- ┌─────────────┐             ┌─────────────┐
- │ PostgreSQL  │             │    Redis    │
- └─────────────┘             └──────┬──────┘
-                                    │
-                     ┌──────────────┴──────────────┐
-                     ▼                             ▼
-              ┌─────────────┐              ┌─────────────┐
-              │ Celery Beat │              │ Celery Worker│
-              └──────┬──────┘              └──────┬──────┘
-                     │                            │
-                     └────────────┬───────────────┘
-                                  ▼
-                        Website Health Checks
 ```
+POST   /auth/register
+POST   /auth/login
 
----
-
-## Tech Stack
-
-### Backend
-
-* FastAPI
-* Python
-
-### Database
-
-* PostgreSQL
-* SQLAlchemy ORM
-
-### Task Queue
-
-* Celery
-* Redis
-
-### Monitoring
-
-* HTTPX
-
-### Authentication
-
-* JWT Authentication
-
----
-
-## Monitoring Workflow
-
-1. User creates a monitor.
-2. Celery Beat periodically scans for monitors due for execution.
-3. Due monitors are sent to Redis.
-4. Celery Workers consume monitoring tasks.
-5. Sentinel performs an HTTP health check.
-6. Results are stored in PostgreSQL.
-7. Monitor status is updated.
-8. Incidents are created when failures are detected.
-
----
-
-## API Endpoints
-
-### Authentication
-
-```http
-POST /auth/register
-POST /auth/login
-```
-
-### Monitors
-
-```http
-POST /monitors
-GET /monitors
-GET /monitors/{id}
+POST   /monitors
+GET    /monitors
+GET    /monitors/{id}
 DELETE /monitors/{id}
+
+GET    /incidents
+GET    /incidents/{id}
+
+GET    /results
+GET    /results/{monitor_id}
 ```
 
-### Incidents
-
-```http
-GET /incidents
-GET /incidents/{id}
-```
-
-### Check Results
-
-```http
-GET /results
-GET /results/{monitor_id}
-```
-
----
-
-## Installation
-
-### Clone Repository
+## Running it locally
 
 ```bash
 git clone https://github.com/YSR99/Sentinel_uptime_monitor.git
 cd Sentinel_uptime_monitor
-```
-
-### Create Virtual Environment
-
-```bash
 python -m venv venv
-source venv/bin/activate
-```
-
-### Install Dependencies
-
-```bash
+source venv/bin/activate   # venv\Scripts\activate on Windows
 pip install -r requirements.txt
 ```
 
-### Configure Environment Variables
-
-Create a `.env` file:
-
-```env
+Add a `.env`:
+```
 DATABASE_URL=your_database_url
 SECRET_KEY=your_secret_key
 REDIS_URL=redis://localhost:6379/0
 ```
 
-### Run FastAPI
-
+Run everything (three separate terminals):
 ```bash
 uvicorn app.main:app --reload
-```
-
-### Run Celery Worker
-
-```bash
 celery -A app.workers.celery_app:celery worker --loglevel=info
-```
-
-### Run Celery Beat
-
-```bash
 celery -A app.workers.celery_app:celery beat --loglevel=info
 ```
 
----
+## What's next
 
-## Future Improvements
-
-* Email Notifications
-* Slack Alerts
-* SMS Notifications
-* Advanced Analytics Dashboard
-* Multi-Region Monitoring
-* Docker Deployment
-* Kubernetes Support
-
----
+- Email / Slack / SMS alerts on incidents
+- Analytics dashboard
+- Multi-region checks
+- Docker + Kubernetes deployment
 
 ## Author
 
-Yuvraj Rana
-
-Computer Science Engineering Student
-
+Yuvraj Rana — Computer Science Engineering
